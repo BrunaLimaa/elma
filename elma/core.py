@@ -169,19 +169,7 @@ def generate_plot(
     Generates a diagnostic plot and saves it to a file.
     """
     fig, ax = plt.subplots(figsize=(10, 10))
-    ax.imshow(image_data, origin='lower')
-    
-    h, w = image_data.shape[:2]
-    zoom_radius = int(bar_radius_pixels * 1.7) if bar_radius_pixels > 0 else int(w * 0.25)
-    cx, cy = w // 2, h // 2
-    
-    x_min = max(0, cx - zoom_radius)
-    x_max = min(w, cx + zoom_radius)
-    y_min = max(0, cy - zoom_radius)
-    y_max = min(h, cy + zoom_radius)
-    
-    ax.set_xlim(x_min, x_max)
-    ax.set_ylim(y_min, y_max)    
+    ax.imshow(image_data, origin='lower', interpolation='lanczos')
     
     for iso in isolist:
         sma = float(iso.sma)
@@ -212,7 +200,7 @@ def generate_plot(
             bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', boxstyle='square,pad=0.8'))
     
     plt.title(f"Analysis: {os.path.basename(filename_out)}")
-    plt.savefig(filename_out, dpi=150, bbox_inches='tight')
+    plt.savefig(filename_out, dpi=300, bbox_inches='tight')
     plt.close(fig)
     logger.info("Plot saved to: %s", filename_out)
 
@@ -228,20 +216,8 @@ def generate_bar_plot(
     Creates a focused plot with ONLY the galaxy + the chosen red ellipse + size label.
     """
     fig, ax = plt.subplots(figsize=(10, 10))
-    ax.imshow(image_data, origin='lower')
+    ax.imshow(image_data, origin='lower', interpolation='lanczos')
     
-    h, w = image_data.shape[:2]
-    zoom_radius = int(bar_radius_pixels * 1.5) if bar_radius_pixels > 0 else int(w * 0.15)
-    cx, cy = w // 2, h // 2
-    
-    x_min = max(0, cx - zoom_radius)
-    x_max = min(w, cx + zoom_radius)
-    y_min = max(0, cy - zoom_radius)
-    y_max = min(h, cy + zoom_radius)
-    
-    ax.set_xlim(x_min, x_max)
-    ax.set_ylim(y_min, y_max)
-
     for iso in isolist:
         sma = float(iso.sma)
         if np.isclose(sma, bar_radius_pixels, atol=0.5):
@@ -268,7 +244,7 @@ def generate_bar_plot(
             bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', boxstyle='square,pad=0.8'))
     
     plt.title(f"Analysis (Bar Only): {os.path.basename(filename_out)}")
-    plt.savefig(filename_out, dpi=150, bbox_inches='tight', facecolor='black')
+    plt.savefig(filename_out, dpi=300, bbox_inches='tight', facecolor='black')
     plt.close(fig)
     logger.info("Bar plot saved to: %s", filename_out)
 
@@ -298,10 +274,10 @@ def save_debug_image(image_data: np.ndarray, filename_original: str) -> None:
     Saves a debug image of the input data.
     """
     fig, ax = plt.subplots(figsize=(8, 8))
-    ax.imshow(image_data, origin='lower')
+    ax.imshow(image_data, origin='lower', interpolation='lanczos')
     ax.set_title("RGB INPUT CHECK:", fontsize=10)
     
     debug_name = filename_original.replace(".fits", "_DEBUG_INPUT.png")
-    plt.savefig(debug_name, dpi=150, bbox_inches='tight')
+    plt.savefig(debug_name, dpi=300, bbox_inches='tight')
     plt.close()
     logger.info("Debug image saved to: %s", debug_name)
