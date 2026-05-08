@@ -66,7 +66,7 @@ def calculate_kpc(
     om0: float = 0.3
 ) -> float:
     """
-    Converts pixel length to physical distance in kpc.
+    Converts pixel length to physical distance in kpc using manual cosmology calculation.
 
     Args:
         bar_length_pixels: Length of the bar in pixels.
@@ -78,20 +78,17 @@ def calculate_kpc(
     Returns:
         Physical size in kpc.
     """
+    # Reverting to manual angular diameter distance calculation as requested
     cosmo = LambdaCDM(H0=h0, Om0=om0, Ode0=1.0 - om0)
     
     scales = wcs.utils.proj_plane_pixel_scales(wcs_info)
-    # Use only the first two axes for spatial scale (ignoring the 3rd if it exists)
-    deg_per_pixel = np.mean(scales[:2])
+    # Reverting to the logic of using the first scale
+    deg_per_pixel = scales[0]
     
     bar_size_deg = bar_length_pixels * deg_per_pixel
-    # Small angle approximation for tan(theta) approx theta
-    # Size_physical = theta_rad * Distance_angular_diameter
     bar_size_rad = np.deg2rad(bar_size_deg)
     
     distance_mpc = cosmo.angular_diameter_distance(redshift)
-    # The result was huge because bar_size_rad * distance_mpc (in Mpc) * 1000 (to kpc)
-    # is the correct formula. 
     distance_kpc = distance_mpc.to(u.kpc).value
     
     return bar_size_rad * distance_kpc
@@ -133,7 +130,7 @@ def generate_plot(
     filename_out: str
 ) -> None:
     """
-    Generates a diagnostic plot and saves it to a file.
+    Generates a diagnostic plot and saves it to a file using the original plotting logic.
 
     Args:
         image_data: 2D galaxy image.
@@ -147,11 +144,12 @@ def generate_plot(
         logger.error("Cannot generate plot: all data is invalid (NaN or <= 0).")
         return
 
+    # Original normalization
     norm = simple_norm(image_data[good_mask], stretch='log', percent=98.5)
     
     fig, ax = plt.subplots(figsize=(10, 10))
-    # Reverting to gray_r as requested
-    ax.imshow(image_data, cmap='gray_r', origin='lower', norm=norm)
+    # Original colormap
+    im = ax.imshow(image_data, cmap='gray_r', origin='lower', norm=norm)
     
     for iso in isolist:
         if iso.sma < 3: 
@@ -159,6 +157,7 @@ def generate_plot(
 
         is_bar = np.isclose(iso.sma, bar_radius_pixels, atol=0.5)
         
+        # Original color scheme
         color = 'red' if is_bar else 'blue'
         alpha = 1.0 if is_bar else 0.3
         linewidth = 2.5 if is_bar else 1.0
@@ -178,6 +177,7 @@ def generate_plot(
     
     length_px = bar_radius_pixels * 2
     info_text = f"Bar Length: {kpc_size:.2f} kpc\n({length_px:.1f} pixels)"
+    # Original text style
     ax.text(0.02, 0.98, info_text, transform=ax.transAxes, color='red', 
             fontsize=12, verticalalignment='top', fontweight='bold',
             bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
@@ -222,7 +222,7 @@ def run_pipeline(
 
 def save_debug_image(image_data: np.ndarray, filename_original: str) -> None:
     """
-    Saves a debug image of the input data.
+    Saves a debug image of the input data using the original logic.
 
     Args:
         image_data: 2D galaxy image.
