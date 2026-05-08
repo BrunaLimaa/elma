@@ -14,7 +14,8 @@ dependencies = [
     "matplotlib",
     "astropy",
     "photutils",
-    "scipy"
+    "scipy",
+    "pytest"
 ]
 
 [tool.setuptools.packages.find]
