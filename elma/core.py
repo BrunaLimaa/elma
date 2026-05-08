@@ -261,10 +261,11 @@ def generate_bar_plot(
             ax.add_patch(e)
             break 
     
-    info_text = f"Bar Length: {kpc_size:.2f} kpc"
+    length_bar = 2 * bar_radius_pixels
+    info_text = f"Bar Length: {kpc_size:.2f} kpc\n({length_bar:.1f} pixels)"
     ax.text(0.05, 0.95, info_text, transform=ax.transAxes, color='red', 
-            fontsize=14, fontweight='bold', va='top', ha='left',
-            bbox=dict(facecolor='white', alpha=0.8, edgecolor='none'))
+            fontsize=16, va='top', ha='left',
+            bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', boxstyle='square,pad=0.8'))
     
     plt.title(f"Analysis (Bar Only): {os.path.basename(filename_out)}")
     plt.savefig(filename_out, dpi=150, bbox_inches='tight', facecolor='black')
