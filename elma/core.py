@@ -1,3 +1,4 @@
+import os
 import logging
 import numpy as np
 import matplotlib.pyplot as plt
@@ -55,7 +56,7 @@ def load_and_process(filename: str) -> Tuple[np.ndarray, WCS]:
         else:
             raise ValueError(f"Unsupported data dimensions: {data.ndim} in {filename}")
         
-    return image_2d.astype(float), wcs_info
+        return image_2d.astype(float), wcs_info
 
 def calculate_kpc(
     bar_length_pixels: float, 
@@ -80,13 +81,17 @@ def calculate_kpc(
     cosmo = LambdaCDM(H0=h0, Om0=om0, Ode0=1.0 - om0)
     
     scales = wcs.utils.proj_plane_pixel_scales(wcs_info)
-    # Use average scale if non-square pixels
-    deg_per_pixel = np.mean(scales)
+    # Use only the first two axes for spatial scale (ignoring the 3rd if it exists)
+    deg_per_pixel = np.mean(scales[:2])
     
     bar_size_deg = bar_length_pixels * deg_per_pixel
+    # Small angle approximation for tan(theta) approx theta
+    # Size_physical = theta_rad * Distance_angular_diameter
     bar_size_rad = np.deg2rad(bar_size_deg)
     
     distance_mpc = cosmo.angular_diameter_distance(redshift)
+    # The result was huge because bar_size_rad * distance_mpc (in Mpc) * 1000 (to kpc)
+    # is the correct formula. 
     distance_kpc = distance_mpc.to(u.kpc).value
     
     return bar_size_rad * distance_kpc
@@ -142,27 +147,21 @@ def generate_plot(
         logger.error("Cannot generate plot: all data is invalid (NaN or <= 0).")
         return
 
-    # Using a higher percentile for better dynamic range in the log stretch
-    norm = simple_norm(image_data[good_mask], stretch='log', percent=99.5)
+    norm = simple_norm(image_data[good_mask], stretch='log', percent=98.5)
     
-    fig, ax = plt.subplots(figsize=(12, 12))
-    # 'magma' is a perceptually uniform colormap, excellent for astrophysical data
-    im = ax.imshow(image_data, cmap='magma', origin='lower', norm=norm)
+    fig, ax = plt.subplots(figsize=(10, 10))
+    # Reverting to gray_r as requested
+    ax.imshow(image_data, cmap='gray_r', origin='lower', norm=norm)
     
-    # Add a refined colorbar
-    cbar = fig.colorbar(im, ax=ax, fraction=0.046, pad=0.04)
-    cbar.set_label('Flux (Log Scale)', fontsize=12)
-
     for iso in isolist:
         if iso.sma < 3: 
             continue 
 
         is_bar = np.isclose(iso.sma, bar_radius_pixels, atol=0.5)
         
-        # Cyan isophotes and Yellow bar provide high contrast against 'magma' background
-        color = 'yellow' if is_bar else 'cyan'
-        alpha = 1.0 if is_bar else 0.4
-        linewidth = 3.5 if is_bar else 1.2
+        color = 'red' if is_bar else 'blue'
+        alpha = 1.0 if is_bar else 0.3
+        linewidth = 2.5 if is_bar else 1.0
         
         angle_deg = np.degrees(iso.pa)
         smi = iso.sma * (1 - iso.eps)
@@ -179,15 +178,15 @@ def generate_plot(
     
     length_px = bar_radius_pixels * 2
     info_text = f"Bar Length: {kpc_size:.2f} kpc\n({length_px:.1f} pixels)"
-    ax.text(0.02, 0.98, info_text, transform=ax.transAxes, color='yellow', 
-            fontsize=14, verticalalignment='top', fontweight='bold',
-            bbox=dict(facecolor='black', alpha=0.6, edgecolor='yellow'))
+    ax.text(0.02, 0.98, info_text, transform=ax.transAxes, color='red', 
+            fontsize=12, verticalalignment='top', fontweight='bold',
+            bbox=dict(facecolor='white', alpha=0.7, edgecolor='none'))
     
-    plt.title(f"Galaxy Bar Analysis: {os.path.basename(filename_out)}", fontsize=16, pad=20)
+    plt.title(f"Analysis: {os.path.basename(filename_out)}")
     
-    plt.savefig(filename_out, dpi=200, bbox_inches='tight')
+    plt.savefig(filename_out, dpi=150)
     plt.close() 
-    logger.info("Enhanced plot saved to: %s", filename_out)
+    logger.info("Plot saved to: %s", filename_out)
 
 def run_pipeline(
     filename: str, 
@@ -232,9 +231,9 @@ def save_debug_image(image_data: np.ndarray, filename_original: str) -> None:
     fig, ax = plt.subplots(figsize=(8, 8))
     
     good_mask = ~np.logical_or(np.isnan(image_data), image_data <= 0)
-    norm = simple_norm(image_data[good_mask], stretch='log', percent=99.0) if np.any(good_mask) else None
+    norm = simple_norm(image_data[good_mask], stretch='log', percent=98.5) if np.any(good_mask) else None
     
-    im = ax.imshow(image_data, cmap='magma', origin='lower', norm=norm)
+    im = ax.imshow(image_data, cmap='gray_r', origin='lower', norm=norm)
     
     cbar = fig.colorbar(im, ax=ax, fraction=0.045, pad=0.04)
     cbar.set_label('Flux (Log Scale)', fontsize=8)
