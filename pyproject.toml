@@ -4,7 +4,7 @@ requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "barfinder"
+name = "elma"
 version = "0.1.0"
 description = "Functions for bar detection in galaxy images"
 authors = [{name = "Bruna Lima", email= "brunarblima93@gmail.com"}]

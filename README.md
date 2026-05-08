@@ -1,6 +1,6 @@
-# barfinder: Automated Galaxy Bar Detection Pipeline
+# Elma: Automated Galaxy Bar Detection Pipeline
 
-`barfinder` is a Python package designed to automate the detection and measurement of galactic bars in FITS imaging data. It combines photometic isophote fitting with cosmological calculations to transform raw telescope data into physical scientific measurements.
+`Elma` is a Python package designed to automate the detection and measurement of galactic bars in FITS imaging data. It combines photometic isophote fitting with cosmological calculations to transform raw telescope data into physical scientific measurements.
 
 ## Features
 
@@ -19,8 +19,8 @@
 You can install the package and its dependencies directly from the source:
 
 ```bash
-git clone [https://github.com/BrunaLimaa/barfinder.git](https://github.com/BrunaLimaa/barfinder.git)
-cd barfinder
+git clone https://github.com/BrunaLimaa/elma.git
+cd elma
 pip install .
 
 ```
@@ -37,7 +37,7 @@ pip install -r requirements.txt
 The package is designed to be imported and run with a single high-level command.
 
 ```python
-from barfinder import run_pipeline
+from elma import run_pipeline
 
 # Path to your FITS file (2D image or 3D cube)
 fits_file = "data/galaxy_sample.fits"
@@ -55,7 +55,7 @@ print(f"Detected Bar Length: {bar_size_kpc:.2f} kpc")
 
 ## Outputs
 
-For every processed galaxy, `barfinder` generates two artifacts in the working directory:
+For every processed galaxy, `elma` generates two artifacts in the working directory:
 
 * **`*_analysis.png`**: The primary result.
 * **Background:** Log-scaled flux map of the galaxy.
@@ -72,11 +72,11 @@ For every processed galaxy, `barfinder` generates two artifacts in the working d
 The pipeline treats galaxy morphology as a signal processing problem. It fits concentric ellipses (isophotes) expanding from the galaxy center.
 
 * **Step Size:** 0.05 (Fixed high-resolution sampling).
-* **Safety Mask:** The central region ( pixels) is ignored to prevent the Point Spread Function (PSF) or nuclear noise from triggering false positives.
+* **Safety Mask:** The central region (pixels) is ignored to prevent the Point Spread Function (PSF) or nuclear noise from triggering false positives.
 
 ### 2. The Physics
 
-To enable fair comparisons across different redshifts, `barfinder` calculates the size at the epoch of emission.
+To enable fair comparisons across different redshifts, `elma` calculates the size at the epoch of emission.
 
 ## 🛠 Dependencies
 
