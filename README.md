@@ -1,14 +1,14 @@
 # Elma: Automated Galaxy Bar Detection Pipeline
 
-`Elma` is a Python package designed to automate the detection and measurement of galactic bars in FITS imaging data. It combines photometic isophote fitting with cosmological calculations to transform raw telescope data into physical scientific measurements.
+`Elma` is a Python package designed to automate the detection and measurement of galactic bars in FITS imaging data. It combines photometric isophote fitting with manual cosmological calculations to transform raw telescope data into physical scientific measurements.
 
 ## Features
 
 * **Adaptive Input:** Automatically handles 2D images and 3D IFU data cubes (via spectral collapse).
-* **Isophote Fitting:** fits galaxy light profiles using Iterative Ellipse Fitting.
+* **Isophote Fitting:** Fits galaxy light profiles using Iterative Ellipse Fitting.
 * **Automated Detection:** Identifies bar length via peak ellipticity, masking the noisy nucleus.
-* **Physical Units:** Converts pixels to Kiloparsecs (kpc) using WCS and LambdaCDM Cosmology.
-* **Visualization:** Exports diagnostic plots of the fitted isophotes and detected bar vectors.
+* **Physical Units:** Converts pixels to Kiloparsecs (kpc) using WCS and manual angular diameter distance integration.
+* **High-Quality Visualization:** Exports high-resolution (300 DPI) RGB diagnostic plots with Lanczos interpolation for maximum clarity.
 
 ## Installation
 
@@ -22,19 +22,17 @@ You can install the package and its dependencies directly from the source:
 git clone https://github.com/BrunaLimaa/elma.git
 cd elma
 pip install .
-
 ```
 
 Or install the dependencies manually:
 
 ```bash
 pip install -r requirements.txt
-
 ```
 
 ## Usage
 
-The package is designed to be imported and run with a single high-level command.
+The package is designed to be run with a single high-level command.
 
 ```python
 from elma import run_pipeline
@@ -50,46 +48,50 @@ galaxy_redshift = 0.42
 bar_size_kpc = run_pipeline(filename=fits_file, redshift=galaxy_redshift)
 
 print(f"Detected Bar Length: {bar_size_kpc:.2f} kpc")
+```
 
+### Batch Processing
+An example script is provided to process multiple files with specific redshifts:
+
+```bash
+python example_batch_run.py
 ```
 
 ## Outputs
 
-For every processed galaxy, `elma` generates two artifacts in the working directory:
+For every processed galaxy, `elma` generates three artifacts:
 
-* **`*_analysis.png`**: The primary result.
-* **Background:** Log-scaled flux map of the galaxy.
-* **Blue Ellipses:** The isophote fits tracing the galaxy's potential.
-* **Red Ellipse:** The specific isophote identified as the "Bar" based on the peak ellipticity.
+* **`*_analysis_all.png`**: Full-field RGB image showing all fitted isophotes (Cyan) and the detected Bar (Red).
+* **`*_analysis_bar_only.png`**: Full-field RGB image highlighting only the detected Bar ellipse.
+* **`*_DEBUG_INPUT.png`**: A quality control plot showing the RGB input before processing.
 
-
-* **`*_DEBUG_INPUT.png`**: A quality control plot showing the raw data (or the collapsed cube) before processing, useful for verifying signal-to-noise ratios.
+All plots are generated at **300 DPI** using **Lanczos interpolation** to match the quality of the original input data.
 
 ## Methodology
 
 ### 1. The Algorithm
-
-The pipeline treats galaxy morphology as a signal processing problem. It fits concentric ellipses (isophotes) expanding from the galaxy center.
-
-* **Step Size:** 0.05 (Fixed high-resolution sampling).
-* **Safety Mask:** The central region (pixels) is ignored to prevent the Point Spread Function (PSF) or nuclear noise from triggering false positives.
+The pipeline fits concentric ellipses expanding from the galaxy center using the `photutils` isophote engine. It identifies the bar by locating the peak in ellipticity while ignoring the PSF-dominated central pixels.
 
 ### 2. The Physics
+To enable fair comparisons across different redshifts, `elma` calculates the angular diameter distance using manual trapezoidal integration of the LambdaCDM expansion history ($H_0=70, \Omega_m=0.3, \Omega_\Lambda=0.7$).
 
-To enable fair comparisons across different redshifts, `elma` calculates the size at the epoch of emission.
+## Testing
+The project includes a suite of unit tests using `pytest`.
+
+```bash
+python -m pytest tests/test_core.py
+```
 
 ## 🛠 Dependencies
 
 * `numpy`
 * `matplotlib`
-* `astropy` (FITS handling, WCS, Cosmology)
-* `photutils` (Isophote fitting engine)
+* `astropy` (FITS, WCS)
+* `photutils` (Isophote fitting)
 * `scipy`
+* `pytest`
 
 ## 👤 Author
 
 **Bruna Lima**
-
 Computer Science Undergraduate, UFRGS
-
-
