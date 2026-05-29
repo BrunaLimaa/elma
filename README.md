@@ -40,6 +40,17 @@ python example_batch_run.py
 
 The script iterates over a dictionary of `filename: redshift` pairs, calls `run_pipeline` for each, collects results, and reports them alongside any filter keywords found in the FITS headers.
 
+After all files are processed, a summary table is printed to the terminal with the detected bar length and FITS filter metadata for each galaxy:
+
+```
+Summary of Results:
+------------------------------------------------------------
+galaxy_a.fits  :    10.96 kpc  |  filters: FILTER1=F090W, FILTER2=F115W, FILTER3=F150W
+galaxy_b.fits  :    13.91 kpc  |  filters: FILTER1=F090W, FILTER2=F115W, FILTER3=F150W
+galaxy_c.fits  :    10.28 kpc  |  filters: FILTER1=F090W, FILTER2=F150W, FILTER3=F182M
+------------------------------------------------------------
+```
+
 ## Outputs
 
 For each processed galaxy `elma` saves three files next to the input FITS:
