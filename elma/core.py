@@ -15,6 +15,22 @@ from typing import Tuple, Optional, Any
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
+_FILTER_KEYS = ("FILTER", "FILTER1", "FILTER2", "FILTER3", "FILTNAM1", "FILTNAM2", "FILTNAM3", "PHOTFILT", "BAND")
+
+def get_fits_filters(filename: str) -> dict:
+    """
+    Returns filter/band header keywords found across all HDUs in a FITS file.
+    Keys are header keyword names, values are the corresponding header values.
+    """
+    found = {}
+    with fits.open(filename) as hdul:
+        for hdu in hdul:
+            for key in _FILTER_KEYS:
+                if key in hdu.header and key not in found:
+                    found[key] = hdu.header[key]
+    return found
+
+
 def calculate_angular_diameter_distance(redshift: float) -> float:
     """
     Calculates the angular diameter distance locally.
