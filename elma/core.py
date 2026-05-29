@@ -69,14 +69,17 @@ def load_image_rgb(filename: str) -> np.ndarray:
     Loads 3D FITS data and converts to an RGB image using make_lupton_rgb.
     """
     with fits.open(filename) as hdul:
-        data = hdul[0].data        
-        
-        r, g, b = data[0], data[1], data[2]
-        
+        data = hdul[0].data
+
+        if data.ndim == 3:
+            r, g, b = data[0], data[1], data[2]
+        else:
+            r = g = b = data
+
         r = r / np.nanpercentile(r, 99)
         g = g / np.nanpercentile(g, 99)
         b = b / np.nanpercentile(b, 99)
-        
+
     rgb_img = make_lupton_rgb(r, g, b, stretch=1.5, Q=5, minimum=0.01)
     
     return rgb_img
@@ -186,19 +189,34 @@ def generate_plot(
     """
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.imshow(image_data, origin='lower', interpolation='lanczos')
-    
+
+    # Determine galaxy center from the bar isophote (or image peak as fallback)
+    cx, cy = None, None
+    for iso in isolist:
+        if np.isclose(float(iso.sma), bar_radius_pixels, atol=0.5):
+            cx, cy = float(iso.x0), float(iso.y0)
+            break
+    if cx is None:
+        h, w = image_data.shape[:2]
+        cy, cx = h / 2, w / 2
+
+    h, w = image_data.shape[:2]
+    pad = max(bar_radius_pixels * 2, min(h, w) * 0.25)
+    ax.set_xlim(cx - pad, cx + pad)
+    ax.set_ylim(cy - pad, cy + pad)
+
     for iso in isolist:
         sma = float(iso.sma)
-        if sma < 3: continue 
+        if sma < 3: continue
 
         is_bar = np.isclose(sma, bar_radius_pixels, atol=0.5)
-        
+
         x0 = float(iso.x0)
         y0 = float(iso.y0)
         pa = float(iso.pa)
         eps = float(iso.eps)
         smi = sma * (1 - eps)
-        
+
         e = MplEllipse(xy=(x0, y0),
                        width=2*sma,
                        height=2*smi,
@@ -208,13 +226,13 @@ def generate_plot(
                        linewidth=2.5 if is_bar else 1.0,
                        alpha=1.0 if is_bar else 0.3)
         ax.add_patch(e)
-    
+
     length_bar = 2 * bar_radius_pixels
     info_text = f"Bar Length: {kpc_size:.2f} kpc\n({length_bar:.1f} pixels)"
-    ax.text(0.05, 0.95, info_text, transform=ax.transAxes, color='red', 
+    ax.text(0.05, 0.95, info_text, transform=ax.transAxes, color='white',
             fontsize=16, va='top', ha='left',
-            bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', boxstyle='square,pad=0.8'))
-    
+            bbox=dict(facecolor='black', alpha=0.8, edgecolor='none', boxstyle='square,pad=0.8'))
+
     plt.title(f"Analysis: {os.path.basename(filename_out)}")
     plt.savefig(filename_out, dpi=300, bbox_inches='tight')
     plt.close(fig)
@@ -233,32 +251,43 @@ def generate_bar_plot(
     """
     fig, ax = plt.subplots(figsize=(10, 10))
     ax.imshow(image_data, origin='lower', interpolation='lanczos')
-    
+
+    cx, cy = None, None
     for iso in isolist:
         sma = float(iso.sma)
         if np.isclose(sma, bar_radius_pixels, atol=0.5):
-            x0 = float(iso.x0)
-            y0 = float(iso.y0)
+            cx, cy = float(iso.x0), float(iso.y0)
+            x0 = cx
+            y0 = cy
             pa = float(iso.pa)
             eps = float(iso.eps)
             smi = sma * (1 - eps)
-            
+
             e = MplEllipse(xy=(x0, y0),
                            width=2*sma,
                            height=2*smi,
                            angle=np.degrees(pa),
                            edgecolor='red',
                            facecolor='none',
-                           linewidth=3.0) 
+                           linewidth=3.0)
             ax.add_patch(e)
-            break 
-    
+            break
+
+    if cx is None:
+        h, w = image_data.shape[:2]
+        cy, cx = h / 2, w / 2
+
+    h, w = image_data.shape[:2]
+    pad = max(bar_radius_pixels * 2, min(h, w) * 0.25)
+    ax.set_xlim(cx - pad, cx + pad)
+    ax.set_ylim(cy - pad, cy + pad)
+
     length_bar = 2 * bar_radius_pixels
     info_text = f"Bar Length: {kpc_size:.2f} kpc\n({length_bar:.1f} pixels)"
-    ax.text(0.05, 0.95, info_text, transform=ax.transAxes, color='red', 
+    ax.text(0.05, 0.95, info_text, transform=ax.transAxes, color='white',
             fontsize=16, va='top', ha='left',
-            bbox=dict(facecolor='white', alpha=0.8, edgecolor='none', boxstyle='square,pad=0.8'))
-    
+            bbox=dict(facecolor='black', alpha=0.8, edgecolor='none', boxstyle='square,pad=0.8'))
+
     plt.title(f"Analysis (Bar Only): {os.path.basename(filename_out)}")
     plt.savefig(filename_out, dpi=300, bbox_inches='tight', facecolor='black')
     plt.close(fig)
