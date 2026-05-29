@@ -1,22 +1,17 @@
 # Elma: Automated Galaxy Bar Detection Pipeline
 
-`Elma` is a Python package designed to automate the detection and measurement of galactic bars in FITS imaging data. It combines photometric isophote fitting with manual cosmological calculations to transform raw telescope data into physical scientific measurements.
+`elma` is a Python package for automated detection and measurement of galactic bars in FITS imaging data. It combines iterative elliptical-isophote fitting with manual cosmological calculations to convert raw telescope data into physical bar-length measurements in kiloparsecs.
 
 ## Features
 
-* **Adaptive Input:** Automatically handles 2D images and 3D IFU data cubes (via spectral collapse).
-* **Isophote Fitting:** Fits galaxy light profiles using Iterative Ellipse Fitting.
-* **Automated Detection:** Identifies bar length via peak ellipticity, masking the noisy nucleus.
-* **Physical Units:** Converts pixels to Kiloparsecs (kpc) using WCS and manual angular diameter distance integration.
-* **High-Quality Visualization:** Exports high-resolution (300 DPI) RGB diagnostic plots with Lanczos interpolation for maximum clarity.
+* **Flexible input:** handles 2D single-band images and 3D data cubes (collapsed spectrally via sum); automatically finds the first populated HDU.
+* **Isophote fitting:** fits concentric ellipses outward from the galaxy centre following the Jedrzejewski (1987) method as implemented in `photutils`.
+* **Bar detection:** identifies the bar as the isophote at the peak ellipticity, excluding the PSF-dominated nucleus (sma < 3 px).
+* **Physical units:** converts pixels to kpc using the WCS pixel scale and angular diameter distance integrated from a flat ΛCDM cosmology (H₀ = 70, Ωm = 0.3, ΩΛ = 0.7).
+* **Adaptive zoom:** output plots are centred on the galaxy and zoomed to the bar scale, with a minimum field floor to avoid over-cropping compact galaxies.
+* **High-quality visualisation:** 300 DPI RGB output using Lanczos interpolation and `make_lupton_rgb` stretch.
 
 ## Installation
-
-### Prerequisites
-* Python 3.8+
-
-### Install via pip
-You can install the package and its dependencies directly from the source:
 
 ```bash
 git clone https://github.com/BrunaLimaa/elma.git
@@ -24,74 +19,71 @@ cd elma
 pip install .
 ```
 
-Or install the dependencies manually:
-
-```bash
-pip install -r requirements.txt
-```
-
 ## Usage
 
-The package is designed to be run with a single high-level command.
+### Single galaxy
 
 ```python
 from elma import run_pipeline
 
-# Path to your FITS file (2D image or 3D cube)
-fits_file = "data/galaxy_sample.fits"
-
-# You MUST provide the redshift (z) for accurate physical sizing
-galaxy_redshift = 0.42
-
-# Run the pipeline
-# Returns the physical size of the bar in kpc
-bar_size_kpc = run_pipeline(filename=fits_file, redshift=galaxy_redshift)
-
-print(f"Detected Bar Length: {bar_size_kpc:.2f} kpc")
+bar_size_kpc = run_pipeline(filename="barred1.fits", redshift=0.42)
+print(f"Detected bar length: {bar_size_kpc:.2f} kpc")
 ```
 
-### Batch Processing
-An example script is provided to process multiple files with specific redshifts:
+### Batch processing
+
+A ready-to-use batch script is provided at [`example_batch_run.py`](example_batch_run.py). It processes a directory of FITS files, each with its own redshift, and prints a summary table of bar lengths and filter metadata.
 
 ```bash
 python example_batch_run.py
 ```
 
+The script iterates over a dictionary of `filename: redshift` pairs, calls `run_pipeline` for each, collects results, and reports them alongside any filter keywords found in the FITS headers.
+
 ## Outputs
 
-For every processed galaxy, `elma` generates three artifacts:
+For each processed galaxy `elma` saves three files next to the input FITS:
 
-* **`*_analysis_all.png`**: Full-field RGB image showing all fitted isophotes (Cyan) and the detected Bar (Red).
-* **`*_analysis_bar_only.png`**: Full-field RGB image highlighting only the detected Bar ellipse.
-* **`*_DEBUG_INPUT.png`**: A quality control plot showing the RGB input before processing.
-
-All plots are generated at **300 DPI** using **Lanczos interpolation** to match the quality of the original input data.
+| File | Contents |
+|---|---|
+| `*_analysis_all.png` | Galaxy + all fitted isophotes (cyan, uniform weight) |
+| `*_analysis_bar_only.png` | Galaxy + the detected bar ellipse only (red), with kpc label |
+| `*_DEBUG_INPUT.png` | Raw RGB input check before any processing |
 
 ## Methodology
 
-### 1. The Algorithm
-The pipeline fits concentric ellipses expanding from the galaxy center using the `photutils` isophote engine. It identifies the bar by locating the peak in ellipticity while ignoring the PSF-dominated central pixels.
+### Centre and initialisation
+The galaxy centre is defined as the position of the brightest pixel. The isophote fitter is seeded at a semi-major axis of 5 pixels with ellipticity ε = 0.2, and the centre is held fixed throughout.
 
-### 2. The Physics
-To enable fair comparisons across different redshifts, `elma` calculates the angular diameter distance using manual trapezoidal integration of the LambdaCDM expansion history ($H_0=70, \Omega_m=0.3, \Omega_\Lambda=0.7$).
+### Harmonic fitting
+At each semi-major axis the surface-brightness profile along the trial ellipse is sampled as a function of the eccentric anomaly *E* and decomposed as:
+
+**I(E) = I₀ + Σₙ [ Aₙ sin(nE) + Bₙ cos(nE) ]**
+
+The low-order coefficients A₂, B₂ are used to update the ellipticity and position angle at each iteration until convergence. Isophotes with sma < 3 px are excluded from bar detection to suppress PSF noise.
+
+### Bar length
+The bar radius is taken as the semi-major axis of the valid isophote with the highest ellipticity. The full bar length is twice this radius.
+
+### Physical scaling
+The pixel scale is read from the WCS header. The angular diameter distance D_A is integrated numerically from the flat ΛCDM Friedmann equation. Bar length in kpc = 2 × radius_px × (pixel scale in rad) × D_A × 1000.
 
 ## Testing
-The project includes a suite of unit tests using `pytest`.
 
 ```bash
 python -m pytest tests/test_core.py
 ```
 
-## 🛠 Dependencies
+## Dependencies
 
 * `numpy`
 * `matplotlib`
-* `astropy` (FITS, WCS)
-* `photutils` (Isophote fitting)
+* `astropy`
+* `photutils`
 * `scipy`
 * `pytest`
 
-## 👤 Author
+## Author
 
-**Bruna Lima**
+**Bruna Lima**  
 Computer Science Undergraduate, UFRGS
