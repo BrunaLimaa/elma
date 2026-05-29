@@ -69,7 +69,7 @@ def load_image_rgb(filename: str) -> np.ndarray:
     Loads 3D FITS data and converts to an RGB image using make_lupton_rgb.
     """
     with fits.open(filename) as hdul:
-        data = hdul[0].data
+        data = next(hdu.data for hdu in hdul if hdu.data is not None)
 
         if data.ndim == 3:
             r, g, b = data[0], data[1], data[2]
@@ -209,8 +209,6 @@ def generate_plot(
         sma = float(iso.sma)
         if sma < 3: continue
 
-        is_bar = np.isclose(sma, bar_radius_pixels, atol=0.5)
-
         x0 = float(iso.x0)
         y0 = float(iso.y0)
         pa = float(iso.pa)
@@ -221,17 +219,14 @@ def generate_plot(
                        width=2*sma,
                        height=2*smi,
                        angle=np.degrees(pa),
-                       edgecolor='red' if is_bar else 'cyan',
+                       edgecolor='cyan',
                        facecolor='none',
-                       linewidth=2.5 if is_bar else 1.0,
-                       alpha=1.0 if is_bar else 0.3)
+                       linewidth=1.0,
+                       alpha=0.3)
         ax.add_patch(e)
 
     length_bar = 2 * bar_radius_pixels
-    info_text = f"Bar Length: {kpc_size:.2f} kpc\n({length_bar:.1f} pixels)"
-    ax.text(0.05, 0.95, info_text, transform=ax.transAxes, color='white',
-            fontsize=16, va='top', ha='left',
-            bbox=dict(facecolor='black', alpha=0.8, edgecolor='none', boxstyle='square,pad=0.8'))
+
 
     plt.title(f"Analysis: {os.path.basename(filename_out)}")
     plt.savefig(filename_out, dpi=300, bbox_inches='tight')
@@ -283,9 +278,9 @@ def generate_bar_plot(
     ax.set_ylim(cy - pad, cy + pad)
 
     length_bar = 2 * bar_radius_pixels
-    info_text = f"Bar Length: {kpc_size:.2f} kpc\n({length_bar:.1f} pixels)"
+    info_text = f"Bar Length: {kpc_size:.2f} kpc"
     ax.text(0.05, 0.95, info_text, transform=ax.transAxes, color='white',
-            fontsize=16, va='top', ha='left',
+            fontsize=24, va='top', ha='left',
             bbox=dict(facecolor='black', alpha=0.8, edgecolor='none', boxstyle='square,pad=0.8'))
 
     plt.title(f"Analysis (Bar Only): {os.path.basename(filename_out)}")
