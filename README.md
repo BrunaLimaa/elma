@@ -66,13 +66,6 @@ For each processed galaxy `elma` saves three files next to the input FITS:
 ### Centre and initialisation
 The galaxy centre is defined as the position of the brightest pixel. The isophote fitter is seeded at a semi-major axis of 5 pixels with ellipticity ε = 0.2, and the centre is held fixed throughout.
 
-### Harmonic fitting
-At each semi-major axis the surface-brightness profile along the trial ellipse is sampled as a function of the eccentric anomaly *E* and decomposed as:
-
-**I(E) = I₀ + Σₙ [ Aₙ sin(nE) + Bₙ cos(nE) ]**
-
-The low-order coefficients A₂, B₂ are used to update the ellipticity and position angle at each iteration until convergence. Isophotes with sma < 3 px are excluded from bar detection to suppress PSF noise.
-
 ### Bar length
 The bar radius is taken as the semi-major axis of the valid isophote with the highest ellipticity. The full bar length is twice this radius.
 
