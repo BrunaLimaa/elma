@@ -1,14 +1,26 @@
 import os
 import logging
+from astropy.io import fits
 from elma import run_pipeline
 
 # Configure logging to show output in the console
 logging.basicConfig(level=logging.INFO, format='%(levelname)s: %(message)s')
 logger = logging.getLogger(__name__)
 
+def inspect_fits_filters(filepath):
+    with fits.open(filepath) as hdul:
+        print(f"\nFITS structure for: {os.path.basename(filepath)}")
+        for i, hdu in enumerate(hdul):
+            header = hdu.header
+            print(f"  Extension {i} ({hdu.name}): shape={getattr(hdu.data, 'shape', None)}")
+            for key in ("FILTER", "FILTER1", "FILTER2", "FILTER3", "FILTNAM1", "FILTNAM2", "FILTNAM3", "PHOTFILT", "BAND"):
+                if key in header:
+                    print(f"    {key} = {header[key]}")
+
+
 def main():
     # Directory containing the FITS files
-    data_dir = r"C:\Users\bruna\OneDrive\Documents\IC\barred"
+    data_dir = r"/Users/I774546/personal/barred"
     
     # Dictionary of files and their respective redshift (z) values
     fits_targets = {
@@ -33,6 +45,7 @@ def main():
             
         try:
             logger.info("--- Processing %s (z=%.2f) ---", filename, z)
+            inspect_fits_filters(full_path)
             # Run the pipeline
             bar_size_kpc = run_pipeline(filename=full_path, redshift=z)
             
