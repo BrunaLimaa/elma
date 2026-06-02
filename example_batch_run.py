@@ -8,7 +8,7 @@ logger = logging.getLogger(__name__)
 
 def main():
     # Directory containing the FITS files
-    data_dir = r"/Users/I774546/personal/barred"
+    data_dir = r"/Users/barred"
 
     # Dictionary of files and their respective redshift (z) values
     fits_targets = {
