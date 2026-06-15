@@ -1,6 +1,6 @@
 # Elma: Automated Galaxy Bar Detection Pipeline
 
-`elma` is a Python package for automated detection and measurement of galactic bars in FITS imaging data. It combines iterative elliptical-isophote fitting with manual cosmological calculations to convert raw telescope data into physical bar-length measurements in kiloparsecs.
+`elma` is a Python package for the automated measurement of galactic bars in FITS imaging data. Utilizing iterative elliptical-isophote fitting, the code measures the central galactic component on the assumption that this region is bar-dominated, which holds true for galaxies with prominent bars. It combines this geometric approach with manual cosmological calculations to convert raw telescope data into physical bar-length measurements in kiloparsecs.
 
 ## Features
 
@@ -67,7 +67,7 @@ For each processed galaxy `elma` saves three files next to the input FITS:
 The galaxy centre is defined as the position of the brightest pixel. The isophote fitter is seeded at a semi-major axis of 5 pixels with ellipticity ε = 0.2, and the centre is held fixed throughout.
 
 ### Bar length
-The bar radius is taken as the semi-major axis of the valid isophote with the highest ellipticity. The full bar length is twice this radius.
+Because the pipeline relies strictly on geometric surface brightness rather than statistical structural decomposition, it assumes the central component being fit is the bar. Under this assumption, the bar radius is extracted as the semi-major axis of the valid isophote exhibiting the highest ellipticity. The full bar length is twice this radius.
 
 ### Physical scaling
 The pixel scale is read from the WCS header. The angular diameter distance D_A is integrated numerically from the flat ΛCDM Friedmann equation. Bar length in kpc = 2 × radius_px × (pixel scale in rad) × D_A × 1000.
