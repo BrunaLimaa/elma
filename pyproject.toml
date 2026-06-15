@@ -5,7 +5,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "elma"
-version = "0.1.0"
+version = "1.0.0"
 description = "Functions for bar detection in galaxy images"
 authors = [{name = "Bruna Lima", email= "brunarblima93@gmail.com"}]
 requires-python = ">=3.8"
