@@ -1,4 +1,5 @@
 # Elma: Automated Galaxy Bar Detection Pipeline
+[![DOI](https://zenodo.org/badge/1154406604.svg)](https://doi.org/10.5281/zenodo.20708567)
 
 `elma` is a Python package for the automated measurement of galactic bars in FITS imaging data. Utilizing iterative elliptical-isophote fitting, the code measures the central galactic component on the assumption that this region is bar-dominated, which holds true for galaxies with prominent bars. It combines this geometric approach with manual cosmological calculations to convert raw telescope data into physical bar-length measurements in kiloparsecs.
 
